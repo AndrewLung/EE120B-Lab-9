@@ -32,18 +32,20 @@ int main(void) {
 			tmpD = tmpD | 0x01;
 		}
 		//avoid underflow
+/*
 		if (tmpC > tmpA) {
 			if ((tmpC - tmpA) > 80) {
 				tmpD = tmpD | 0x02;
 			}
 		}
-		else if (tmpA > tmpC) {
+*/
+		if (tmpA > tmpC) {
 			if ((tmpA - tmpC) > 80) {
 				tmpD = tmpD | 0x02;
 			}		
 		}
 		totWeight = totWeight >> 2;
-		tmpD = tmpD | totWeight;
+		tmpD = tmpD | (totWeight & 0xFC);
 		PORTD = tmpD;
 	}
 	return 0;
