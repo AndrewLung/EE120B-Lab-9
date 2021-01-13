@@ -21,7 +21,7 @@ int main(void) {
 	unsigned char tmpB;
 	unsigned char tmpC;
 	unsigned char tmpD = 0x00;
-	unsigned char totWeight = 0x00; 
+	unsigned short totWeight = 0x00; 
 	while(1) {
 		tmpA = PINA;
 		tmpB = PINB;
@@ -42,7 +42,7 @@ int main(void) {
 				tmpD = tmpD | 0x02;
 			}		
 		}
-		totWeight = totWeight & 0xFC;
+		totWeight = totWeight >> 2;
 		tmpD = tmpD | totWeight;
 		PORTD = tmpD;
 	}

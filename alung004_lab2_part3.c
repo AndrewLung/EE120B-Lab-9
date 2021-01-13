@@ -35,7 +35,7 @@ while(1) {
 		PORTC = ((tmpA & 0x70) |  (4 - cntavail));
 ///*
 		if (cntavail == 4) {
-			PORTC = PORTC | 0x80;
+			PORTC = (PORTC & 0x0F) | 0x80;
 		}
 //*/
 	}
