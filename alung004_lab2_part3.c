@@ -32,7 +32,7 @@ while(1) {
 		if (tmpA & 0x08) {
 			cntavail++;
 		}
-		PORTC = ((tmpA & 0x70) | cntavail);
+		PORTC = ((tmpA & 0x70) |  (4 - cntavail));
 ///*
 		if (cntavail == 4) {
 			PORTC = PORTC | 0x80;
