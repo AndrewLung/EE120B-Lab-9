@@ -32,13 +32,11 @@ int main(void) {
 			tmpD = tmpD | 0x01;
 		}
 		//avoid underflow
-/*
 		if (tmpC > tmpA) {
 			if ((tmpC - tmpA) > 80) {
 				tmpD = tmpD | 0x02;
 			}
 		}
-*/
 		if (tmpA > tmpC) {
 			if ((tmpA - tmpC) > 80) {
 				tmpD = tmpD | 0x02;
