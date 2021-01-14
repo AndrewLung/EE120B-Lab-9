@@ -10,22 +10,23 @@
 #include <avr/io.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
-#endif	
+#endif
 
 int main(void) {
-	DDRA = 0x00; PORTA = 0xFF; 
+    /* Insert DDR and PORT initializations */
+	DDRA = 0x00; PORTA = 0xFF;
 	DDRB = 0xFF; PORTB = 0x00;
-	unsigned char tmpB = 0x00; 
-	unsigned char tmpA = 0x00; 
-while(1) {
-		tmpA = PINA & 0x03;
-		if (tmpA == 0x01) { // True if PA0 is 1
-			tmpB = (tmpB & 0xFC) | 0x01;
-		} else {
-			tmpB = (tmpB & 0xFC) | 0x00;
-		}	
-PORTB = tmpB;	
-	}
-	return 0;
+	DDRC = 0xFF; PORTC = 0x00;
+	unsigned char tmpA;
+	unsigned char upperNibble;
+	unsigned char lowerNibble;
+    /* Insert your solution below */
+    while (1) {
+	tmpA = PINA;
+	lowerNibble = (tmpA >> 4) & 0x0F;
+	upperNibble = (tmpA << 4) & 0xF0;
+	PORTB = lowerNibble;
+	PORTC = upperNibble;
+    }
+    return 1;
 }
-
