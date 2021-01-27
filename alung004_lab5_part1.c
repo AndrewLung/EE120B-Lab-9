@@ -20,7 +20,7 @@ int main(void) {
 	unsigned char output;
     /* Insert your solution below */
     while (1) {
-	tmpA = PINA;
+	tmpA = ~PINA;
 	output = 0x00;
 	if (tmpA > 0) {
 		//PC5
