@@ -1,11 +1,13 @@
-/*	Author: lab
- *  Partner(s) Name: Andrew Lung
- *	Lab Section:
- *	Assignment: Lab #  Exercise #
- *	Exercise Description: [optional - include for your own benefit]
+/* Author: Andrew Lung
+ * Partner(s) Name (if applicable):
+ * Lab Section: 22
+ * Assignment: Lab #5  Exercise #3
+ * Exercise Description: [optional - include for your own benefit]
  *
- *	I acknowledge all content contained herein, excluding template or example
- *	code, is my own original work.
+ * I acknowledge all content contained herein, excluding template or example
+ * code, is my own original work.
+ *
+ *  Demo Link: https://www.youtube.com/watch?v=2kM6yd7D5T8
  */
 #include <avr/io.h>
 #ifdef _SIMULATE_
