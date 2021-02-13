@@ -1,0 +1,238 @@
+/* Author: Andrew Lung
+ * Partner(s) Name (if applicable):
+ * Lab Section: 22
+ * Assignment: Lab #9  Exercise #4
+ * Exercise Description: [optional - include for your own benefit]
+ *
+ * I acknowledge all content contained herein, excluding template or example
+ * code, is my own original work.
+ *
+ *  Demo Link: https://www.youtube.com/watch?v=b8-wB6r7LJE&feature=youtu.be
+ */
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#ifdef _SIMULATE_
+#include "simAVRHeader.h"
+#endif
+
+typedef struct task {
+	int state;
+	unsigned long period;
+	unsigned long elapsedTime;
+	int (*TickFct)(int);
+} task;
+
+task tasks[4];
+
+const unsigned char tasksNum = 4;
+//const unsigned long tasksPeriodGCD = 1000;
+const unsigned long periodBlinkLED = 1000;
+const unsigned long periodThreeLEDs = 300;
+const unsigned long periodSpeaker = 2;
+const unsigned long periodPollButton = 100;
+
+int TickBlinkLED(int state);
+enum BlinkLED { LEDon, LEDoff };
+
+int TickThreeLEDs(int state);
+enum ThreeLEDs { light0, light1, light2 };
+
+int TickSpeaker(int state);
+enum Speaker { speakerOn, speakerOff, speakerShut };
+
+int TickButton(int state);
+enum Button { init, release, press };
+
+int TickAll();
+
+unsigned char threeLEDs;
+unsigned char blinkingLED;
+unsigned char speaker;
+
+int TickBlinkLED(int state) {
+	switch (state) {
+		case LEDon:
+			state = LEDoff;
+			blinkingLED = 0x08;
+			break;
+		case LEDoff:
+			state = LEDon;
+			blinkingLED = 0x00;
+			break;
+	}
+	return state;
+}
+
+int TickThreeLEDs(int state) {
+	switch (state) {
+		case light0:
+			state = light1;
+			threeLEDs = 0x01;
+			break;
+		case light1:
+			state = light2;
+			threeLEDs = 0x02;
+			break;
+		case light2:
+			state = light0;
+			threeLEDs = 0x04;
+			break;
+	}
+	return state;
+}
+
+int TickSpeaker(int state) {
+	unsigned char tmpA = ~PINA;
+	switch (state) {
+		case speakerShut:
+			if (tmpA & 0x04) {
+				state = speakerOn;
+			}
+			else {
+				state = speakerShut;
+			}
+			speaker = 0x00;
+			break;
+		case speakerOn:
+			if (tmpA & 0x04) {
+				state = speakerOff;
+			}
+			else {
+				state = speakerShut;
+			}
+			speaker = 0x10;
+			break;
+		case speakerOff:
+			if (tmpA & 0x04) {
+				state = speakerOn;
+			}
+			else {
+				state = speakerShut;
+			}
+			speaker = 0x00;
+			break;
+	}
+	return state;
+}
+
+int TickButton(int state) {
+	unsigned char tmpA = ~PINA;
+	switch (state) {
+		case init:
+			state = release;
+			break;
+		case release:
+			if (tmpA & 0x02) {
+				tasks[2].period = tasks[2].period + 1;
+				state = press;
+			}
+			else if (tmpA & 0x01) {
+				if (tasks[2].period > 1) {
+					tasks[2].period = tasks[2].period - 1;
+				}
+				state = press;
+			}
+			else {
+				state = release;
+			}
+			break;
+		case press:
+			if ((tmpA & 0x01) || (tmpA & 0x02)) {
+				state = press;
+			}
+			else {
+				state = release;
+			}
+			break;
+	}
+	return state;
+}
+
+void CombineLEDs() {
+	unsigned char i;
+	for (i = 0; i < tasksNum; ++i) {
+		if (tasks[i].elapsedTime >= tasks[i].period) {
+			tasks[i].state = tasks[i].TickFct(tasks[i].state);
+			tasks[i].elapsedTime = 0;
+		}
+		tasks[i].elapsedTime += 1;
+	}
+	PORTB = 0 | threeLEDs | blinkingLED | speaker;
+}
+
+volatile unsigned char TimerFlag = 0;
+
+unsigned long _avr_timer_M = 1;
+unsigned long _avr_timer_cntcurr = 0;
+unsigned char cycles;
+
+void TimerOn() {
+	TCCR1B = 0x0B;
+	OCR1A = 125;
+	TIMSK1 = 0x02;
+	TCNT1 = 0;
+	_avr_timer_cntcurr = _avr_timer_M;
+	SREG |= 0x80;
+}
+
+void TimerOff() {
+	TCCR1B = 0x00;
+}
+
+void TimerISR() {
+	TimerFlag = 1;
+}
+
+ISR(TIMER1_COMPA_vect) {
+	_avr_timer_cntcurr--;
+	if (_avr_timer_cntcurr == 0) {
+		TimerISR();
+		_avr_timer_cntcurr = _avr_timer_M;	
+	}
+}
+
+void TimerSet(unsigned long M) {
+	_avr_timer_M = M;
+	_avr_timer_cntcurr = _avr_timer_M;
+}
+
+
+
+int main(void) {
+	DDRA = 0x00; PORTA = 0xFF;
+	DDRB = 0xFF; PORTB = 0x00;              // Initialize outputs
+	threeLEDs = 0;
+	blinkingLED = 0;
+
+	unsigned char i = 0;
+
+	tasks[i].state = light0;
+	tasks[i].period = periodThreeLEDs;
+	tasks[i].elapsedTime = tasks[i].period;
+	tasks[i].TickFct = &TickThreeLEDs;
+	++i;
+	tasks[i].state = LEDon;
+	tasks[i].period = periodBlinkLED;
+	tasks[i].elapsedTime = tasks[i].period;
+	tasks[i].TickFct = &TickBlinkLED;
+	++i;
+	tasks[i].state = speakerOff;
+	tasks[i].period = periodSpeaker;
+	tasks[i].elapsedTime = tasks[i].period;
+	tasks[i].TickFct = &TickSpeaker;
+	++i;
+	tasks[i].state = init;
+	tasks[i].period = periodPollButton;
+	tasks[i].elapsedTime = tasks[i].period;
+	tasks[i].TickFct = &TickButton;
+	TimerOn();
+	TimerSet(1);
+	
+	while(1) {
+		CombineLEDs();
+		while(!TimerFlag);
+		TimerFlag = 0;
+	}
+
+   return 0;
+}
